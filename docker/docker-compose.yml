@@ -1,0 +1,32 @@
+version: '3'
+
+services:
+  worker:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    volumes:
+      - ./temp:/app/temp
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+    command: --queue_url ${QUEUE_URL} --s3_bucket ${S3_BUCKET} --region ${AWS_REGION:-us-east-1}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+  
+  send:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    environment:
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+    entrypoint: python3 scripts/send_to_queue.py
+    command: --youtube_url ${YOUTUBE_URL} --queue_url ${QUEUE_URL} --region ${AWS_REGION:-us-east-1}
