@@ -20,7 +20,10 @@ youtube-transcriber/                # Root of your Git repository
 │   ├── Dockerfile                  # Main Dockerfile
 │   ├── requirements.txt            # Python dependencies
 │   └── entrypoint.sh               # Optional: startup script if needed
-│
+|
+├── runpod-lambda                   # AWS Lambda-based solution for managing GPU instances on RunPod.
+|                                   # creation, management, and termination of GPU pods on the RunPod platform.
+|
 ├── tests/                          # Test files
 │   ├── test_worker.py
 │   ├── test_downloader.py
