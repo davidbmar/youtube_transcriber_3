@@ -51,7 +51,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
   CMD python3 -c "import os, time; health_file='/app/health_check.txt'; exit(0 if os.path.exists(health_file) and time.time() - os.path.getmtime(health_file) < 300 else 1)"
 
 # Set entrypoint
-ENTRYPOINT ["python3", "run.py"]
+ENTRYPOINT ["python3", "worker.py"]
 
 # Default arguments (can be overridden)
 CMD ["--help"]

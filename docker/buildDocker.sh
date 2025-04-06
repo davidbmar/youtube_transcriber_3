@@ -6,4 +6,4 @@
 # Use the Dockerfile in the current directory (-f Dockerfile)
 # But set the build context to the parent directory (..)
 
-docker build -t youtube-transcriber -f Dockerfile ..
+docker build -t davidbmar/whisper-runpod:latest -f Dockerfile ..
