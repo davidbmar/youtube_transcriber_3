@@ -57,6 +57,9 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Install WhisperX
 RUN pip3 install git+https://github.com/m-bain/whisperx.git
 
+RUN pip3 install --no-cache-dir git+https://github.com/m-bain/whisperx.git
+
+
 # Copy application code (adjust paths as needed based on build context)
 COPY src/*.py /app/src/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
