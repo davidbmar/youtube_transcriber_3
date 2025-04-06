@@ -6,10 +6,6 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
-    && unzip awscliv2.zip \
-    && ./aws/install \
-    && rm -rf aws awscliv2.zip
 
 RUN apt-get update && apt-get install -y \
     openssh-server \
@@ -25,6 +21,11 @@ RUN apt-get update && apt-get install -y \
     --no-install-recommends && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf aws awscliv2.zip
 
 
 # Install system dependencies
