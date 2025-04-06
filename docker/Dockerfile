@@ -6,6 +6,10 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
+RUN apt-get update && apt-get install -y openssh-server
+RUN mkdir /var/run/sshd
+
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     python3 \
@@ -39,7 +43,7 @@ RUN pip3 install git+https://github.com/m-bain/whisperx.git
 # docker build -t youtube-transcriber -f docker/Dockerfile .
 COPY src/*.py /app/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
-
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Create necessary directories
 RUN mkdir -p /app/temp
@@ -54,6 +58,7 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
 # Set entrypoint
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 #ENTRYPOINT ["python3", "worker.py"]
+EXPOSE 22
 
 # Default arguments (can be overridden)
 CMD ["--help"]
