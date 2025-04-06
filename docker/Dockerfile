@@ -40,7 +40,8 @@ WORKDIR /app
 
 # Copy requirements first for better caching
 COPY requirements.txt /app/
-# Additional Python packages (could also be added to requirements.txt)
+
+# Install additional Python packages required for your application
 RUN pip3 install --no-cache-dir \
     boto3 \
     requests \
@@ -54,21 +55,21 @@ RUN pip3 install --no-cache-dir \
 # Install Python dependencies from requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
 
-# Install WhisperX
-RUN pip3 install git+https://github.com/m-bain/whisperx.git
+# Install additional dependencies required by whisperx
+RUN pip3 install --no-cache-dir pandas transformers nltk pyannote.audio
 
+# Install WhisperX from GitHub
 RUN pip3 install --no-cache-dir git+https://github.com/m-bain/whisperx.git
 
-
-# Copy application code (adjust paths as needed based on build context)
-COPY src/*.py /app/src/
+# Copy application code (preserving directory structure)
+COPY src/ /app/src/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Create necessary directories for your application
 RUN mkdir -p /app/temp
 
-# Environment variables
+# Set AWS region environment variable
 ENV AWS_DEFAULT_REGION=us-east-2
 
 # Health check configuration
