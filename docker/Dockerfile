@@ -58,8 +58,12 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 # Install additional dependencies required by whisperx
 RUN pip3 install --no-cache-dir pandas transformers nltk pyannote.audio
 
-# Install WhisperX from GitHub
-RUN pip3 install --no-cache-dir git+https://github.com/m-bain/whisperx.git
+# Clone and install WhisperX from GitHub into /opt/whisperx
+RUN git clone https://github.com/m-bain/whisperx.git /opt/whisperx && \
+    pip3 install --no-cache-dir /opt/whisperx
+
+# Set PYTHONPATH so that /opt/whisperx is included in module search
+ENV PYTHONPATH=/opt/whisperx:$PYTHONPATH
 
 # Copy application code (preserving directory structure)
 COPY src/ /app/src/
