@@ -38,6 +38,7 @@ RUN pip3 install git+https://github.com/m-bain/whisperx.git
 # NB: This assumes that the build context to the project root which specifes the Dockerfile location is within something like: /Users/dmar/src/youtube_transcriber_3
 # docker build -t youtube-transcriber -f docker/Dockerfile .
 COPY src/*.py /app/
+COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 
 # Create necessary directories
@@ -51,7 +52,8 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
   CMD python3 -c "import os, time; health_file='/app/health_check.txt'; exit(0 if os.path.exists(health_file) and time.time() - os.path.getmtime(health_file) < 300 else 1)"
 
 # Set entrypoint
-ENTRYPOINT ["python3", "worker.py"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+#ENTRYPOINT ["python3", "worker.py"]
 
 # Default arguments (can be overridden)
 CMD ["--help"]

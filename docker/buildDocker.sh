@@ -7,3 +7,6 @@
 # But set the build context to the parent directory (..)
 
 docker build -t davidbmar/whisper-runpod:latest -f Dockerfile ..
+docker login
+docker push davidbmar/whisper-runpod:latest
+
