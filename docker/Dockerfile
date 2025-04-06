@@ -6,8 +6,25 @@ ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get update && apt-get install -y openssh-server
-RUN mkdir /var/run/sshd
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf aws awscliv2.zip
+
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    python3 \
+    python3-pip \
+    ffmpeg \
+    git \
+    wget \
+    curl \
+    vim \
+    unzip \
+    jq \
+    --no-install-recommends && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 
 # Install system dependencies
@@ -31,6 +48,18 @@ WORKDIR /app
 
 # Copy requirements first for better caching
 COPY requirements.txt /app/
+# you might wan tto add this to requrirements.txt
+RUN pip3 install --no-cache-dir \
+    boto3 \
+    requests \
+    pyyaml \
+    faster-whisper \
+    torch \
+    urllib3 \
+    botocore \
+    soundfile
+
+
 
 # Install Python dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
