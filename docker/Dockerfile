@@ -58,7 +58,7 @@ RUN pip3 install --no-cache-dir -r requirements.txt
 RUN pip3 install git+https://github.com/m-bain/whisperx.git
 
 # Copy application code (adjust paths as needed based on build context)
-COPY src/*.py /app/
+COPY src/*.py /app/src/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
@@ -66,7 +66,7 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 RUN mkdir -p /app/temp
 
 # Environment variables
-ENV AWS_DEFAULT_REGION=us-east-1
+ENV AWS_DEFAULT_REGION=us-east-2
 
 # Health check configuration
 HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
