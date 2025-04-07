@@ -69,6 +69,8 @@ ENV PYTHONPATH=/opt/whisperx:$PYTHONPATH
 COPY src/ /app/src/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
+# This is redundant but to get the worker running.
+COPY src/worker.py/ /app
 
 # Create necessary directories for your application
 RUN mkdir -p /app/temp
