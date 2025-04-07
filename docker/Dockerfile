@@ -71,6 +71,7 @@ COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 # This is redundant but to get the worker running.
 COPY src/worker.py/ /app
+COPY docs/ /app/docs
 
 # Create necessary directories for your application
 RUN mkdir -p /app/temp
