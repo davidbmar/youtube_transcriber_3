@@ -30,7 +30,7 @@ class Transcriber:
     """Handles audio transcription using WhisperX with chunking and progress tracking"""
 
     def __init__(self, model_name="large-v2", device="cuda", chunk_size=30,
-                 s3_bucket=None, region="us-east-1", batch_size=16, vlad_onset=0.10, vlad_offset=0.10):
+                 s3_bucket=None, region="us-east-1", batch_size=16, vad_onset=0.10, vad_offset=0.50):
         """
         Initialize the transcriber
         
@@ -41,8 +41,8 @@ class Transcriber:
             s3_bucket: S3 bucket for storing intermediate results
             region: AWS region
             batch_size: Batch size for processing
-            vlad_onset: Voice activity detection onset threshold (0-1)
-            vlad_offset: Voice activity detection offset threshold (0-1)
+            vad_onset: Voice activity detection onset threshold (0-1)
+            vad_offset: Voice activity detection offset threshold (0-1)
         """
         self.model_name = model_name
         self.device = "cuda" if torch.cuda.is_available() and device == "cuda" else "cpu"
@@ -50,8 +50,8 @@ class Transcriber:
         self.s3_bucket = s3_bucket
         self.s3 = boto3.client('s3', region_name=region) if s3_bucket else None
         self.batch_size = batch_size
-        self.vlad_onset = vlad_onset
-        self.vlad_offset = vlad_offset
+        self.vad_onset = vad_onset
+        self.vad_offset = vad_offset
         self.model = None
 
         logger.info(f"Initializing transcriber with model={model_name}, device={self.device}")
@@ -150,6 +150,13 @@ class Transcriber:
                 # Process each chunk
                 all_segments = []
 
+                # This is to be passed to the self.model.transcribe as in 
+                # something like:   result = self.model.transcribe(audio, vad_options=vad_options)
+                vad_options = {
+                    "vad_onset": self.vad_onset,
+                    "vad_offset": self.vad_offset,
+                }
+
                 for i, chunk_file in enumerate(chunk_files):
                     logger.info(f"Processing chunk {i+1}/{len(chunk_files)}")
 
@@ -158,8 +165,7 @@ class Transcriber:
                         chunk_file,
                         batch_size=self.batch_size,
                         language=language,
-                        vlad_onset=self.vlad_onset,  # Add VAD onset parameter
-                        vlad_offset=self.vlad_offset  # Add VAD offset parameter
+                        vad_options=vad_options
                     )
 
                     # Align words for precise timestamps
@@ -369,9 +375,7 @@ class Transcriber:
                     result = self.model.transcribe(
                         chunk_file,
                         batch_size=self.batch_size,
-                        language=language,
-                        vlad_onset=self.vlad_onset,
-                        vlad_offset=self.vlad_offset
+                        language=language
                     )
 
                     # Align words for precise timestamps
