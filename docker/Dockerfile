@@ -1,5 +1,5 @@
 # Base image with CUDA support
-FROM nvidia/cuda:12.1.1-cudnn8-runtime-ubuntu22.04
+FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -41,29 +41,21 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt /app/
 
+# Install specific versions of PyTorch that are compatible with WhisperX
+RUN pip3 install --no-cache-dir torch==1.10.1 torchaudio==0.10.1 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+
 # Install additional Python packages required for your application
 RUN pip3 install --no-cache-dir \
     boto3 \
     requests \
     pyyaml \
-    faster-whisper \
-    torch \
-    urllib3 \
-    botocore \
     soundfile
+
+# Install WhisperX via pip
+RUN pip3 install --no-cache-dir whisperx
 
 # Install Python dependencies from requirements.txt
 RUN pip3 install --no-cache-dir -r requirements.txt
-
-# Install additional dependencies required by whisperx
-RUN pip3 install --no-cache-dir pandas transformers nltk pyannote.audio
-
-# Clone and install WhisperX from GitHub into /opt/whisperx
-RUN git clone https://github.com/m-bain/whisperx.git /opt/whisperx && \
-    pip3 install --no-cache-dir /opt/whisperx
-
-# Set PYTHONPATH so that /opt/whisperx is included in module search
-ENV PYTHONPATH=/opt/whisperx:$PYTHONPATH
 
 # Copy application code (preserving directory structure)
 COPY src/ /app/src/
@@ -89,4 +81,3 @@ EXPOSE 22
 
 # Default arguments (can be overridden)
 CMD ["--help"]
-
