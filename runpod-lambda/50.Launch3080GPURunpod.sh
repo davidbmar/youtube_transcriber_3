@@ -8,6 +8,7 @@
 # The Lambda function acts as a bridge between AWS and RunPod's API.
 #############################################################################
 
+
 # Display initial message about what we're doing
 echo "Launching 3070 GPU pod on RunPod..."
 
@@ -60,6 +61,7 @@ EOF
 # Docker images, and they can be rotated centrally in your RunPod account.
 #############################################################################
 
+
 # Determine which version of AWS CLI we're using
 # This affects how we format the command to invoke Lambda
 AWS_CLI_VERSION=$(aws --version)
@@ -75,12 +77,22 @@ if [[ $AWS_CLI_VERSION == *"aws-cli/2"* ]]; then
       create-pod-output.json
 else
     echo "Using AWS CLI v1 format"
-    # AWS CLI v1 requires the payload to be manually base64 encoded
-    PAYLOAD=$(cat create-pod-payload.json | base64)
+    # CHANGED: For AWS CLI v1, we'll use the fileb:// prefix which properly handles binary data
+    # This is more reliable than manually base64 encoding
     aws lambda invoke \
       --function-name runpod-manager \
-      --payload "$PAYLOAD" \
+      --payload fileb://create-pod-payload.json \
       create-pod-output.json
+    
+    # ADDED: If the above fails, uncomment the following alternative that uses proper base64 encoding
+    # Note: Different systems may require different flags for base64
+    # On Linux: use -w 0
+    # On macOS: use the default with no flags
+    # PAYLOAD=$(cat create-pod-payload.json | base64 -w 0 2>/dev/null || cat create-pod-payload.json | base64)
+    # aws lambda invoke \
+    #   --function-name runpod-manager \
+    #   --payload "$PAYLOAD" \
+    #   create-pod-output.json
 fi
 
 # Process and display the result from our Lambda function
