@@ -1,38 +1,43 @@
-# Base image with CUDA support
-FROM nvidia/cuda:11.7.1-cudnn8-runtime-ubuntu20.04
+# Base image with Ubuntu 22.04
+FROM ubuntu:22.04
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     DEBIAN_FRONTEND=noninteractive
 
-# Install essential packages including openssh-server and dependencies
-RUN apt-get update && apt-get install -y \
+# First update package lists
+RUN apt-get update
+
+# Install wget and curl explicitly first
+RUN apt-get install -y wget curl unzip
+
+RUN apt-get install -y \
     openssh-server \
     python3 \
+    python3-distutils \
     python3-pip \
     ffmpeg \
     git \
-    wget \
-    curl \
     vim \
-    unzip \
     jq \
     --no-install-recommends && \
-    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
+
+# Ensure pip is available
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3
 
 # Create the /run/sshd directory required by sshd
 RUN mkdir -p /run/sshd && chmod 0755 /run/sshd
 
-# Install AWS CLI v2 (requires curl and unzip)
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+# Install AWS CLI v2
+RUN wget "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -O "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
     && rm -rf aws awscliv2.zip
 
 # Install yt-dlp
-RUN curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && \
+RUN wget -O /usr/local/bin/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp" && \
     chmod a+rx /usr/local/bin/yt-dlp
 
 # Create app directory and set working directory
@@ -41,21 +46,25 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt /app/
 
-# Install specific versions of PyTorch that are compatible with WhisperX
-RUN pip3 install --no-cache-dir torch==1.10.1 torchaudio==0.10.1 -f https://download.pytorch.org/whl/cu113/torch_stable.html
+# Install PyTorch with CUDA support compatible with newer whisperx
+#RUN python3 -m pip install --no-cache-dir torch==2.0.1 torchaudio==2.0.1 --index-url https://download.pytorch.org/whl/cu118
+RUN python3 -m pip install --no-cache-dir torch torchaudio --index-url https://download.pytorch.org/whl/cu118
 
 # Install additional Python packages required for your application
-RUN pip3 install --no-cache-dir \
+RUN python3 -m pip install --no-cache-dir \
     boto3 \
     requests \
     pyyaml \
     soundfile
 
-# Install WhisperX via pip
-RUN pip3 install --no-cache-dir whisperx
+# Install WhisperX via pip first
+RUN python3 -m pip install --no-cache-dir whisperx
 
-# Install Python dependencies from requirements.txt
-RUN pip3 install --no-cache-dir -r requirements.txt
+# Check requirements.txt and remove any whisperx entries
+RUN grep -v "whisperx\|git+https://github.com/m-bain/whisperx.git" requirements.txt > requirements_filtered.txt || cp requirements.txt requirements_filtered.txt
+
+# Install Python dependencies from filtered requirements.txt
+RUN python3 -m pip install --no-cache-dir -r requirements_filtered.txt
 
 # Copy application code (preserving directory structure)
 COPY src/ /app/src/
