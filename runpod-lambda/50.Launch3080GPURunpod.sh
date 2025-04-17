@@ -10,7 +10,7 @@
 
 
 # Display initial message about what we're doing
-echo "Launching 3070 GPU pod on RunPod..."
+echo "Launching 3080 GPU pod on RunPod..."
 
 # Create a JSON file containing the payload for our Lambda function
 # This payload includes all the parameters needed to create a pod on RunPod
@@ -20,7 +20,7 @@ cat > create-pod-payload.json << EOF
   "params": {
     "name": "whisper-pod-alt",
     "image": "davidbmar/whisper-runpod:latest",
-    "gpu_type_id": "RTX 3070",
+    "gpu_type_id": "RTX 3080",
     "cloud_type": "COMMUNITY",
     "use_aws_secrets": true,
     "env_vars": {
