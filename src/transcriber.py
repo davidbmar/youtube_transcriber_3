@@ -30,7 +30,7 @@ class Transcriber:
     """Handles audio transcription using WhisperX with chunking and progress tracking"""
 
     def __init__(self, model_name="large-v2", device="cuda", chunk_size=30,
-                 s3_bucket=None, region="us-east-1", batch_size=16, vad_onset=0.10, vad_offset=0.50):
+                 s3_bucket=None, region="us-east-1", batch_size=16, vad_onset=0.10, vad_offset=0.80):
         """
         Initialize the transcriber
         
