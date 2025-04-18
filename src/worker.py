@@ -71,7 +71,7 @@ class Worker:
         # Initialize transcriber with correct parameters
         device = "cuda" if use_gpu else "cpu"
         self.transcriber = Transcriber(
-            model_name="large-v2",
+            model_name="small.en",
             device=device,
             chunk_size=30,
             s3_bucket=s3_bucket,
