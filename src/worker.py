@@ -1,6 +1,5 @@
-!/usr/bin/python3
+#!/usr/bin/python3
 #worker.py - Main Worker Implementation
-
 import os
 import sys
 import argparse
@@ -15,7 +14,6 @@ import shutil
 import socket
 import subprocess
 from datetime import datetime, timedelta
-
 from src.job_tracker import JobTracker, JobState
 from src.downloader import YouTubeDownloader, DownloadError
 from src.transcriber import Transcriber, TranscriptionError
@@ -239,7 +237,7 @@ class Worker:
                     AttributeNames=['ApproximateNumberOfMessages']
                 )
                 queue_depth = int(response['Attributes'].get('ApproximateNumberOfMessages', '0'))
-                            logger.info(f"Queue depth: {queue_depth} messages")
+                logger.info(f"Queue depth: {queue_depth} messages")
 
                 # Add this new code here
                 attr_response = self.sqs.get_queue_attributes(
