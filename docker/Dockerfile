@@ -1,5 +1,4 @@
-# Base image with CUDA 12.4 runtime support (aligns with torch+cu124)
-# Removed cuDNN from base image name as PyTorch pip package will provide it.
+# Base image with CUDA 12.4 runtime support
 FROM nvidia/cuda:12.4.0-runtime-ubuntu22.04
 
 # Set environment variables
@@ -19,8 +18,11 @@ RUN apt-get update && apt-get install -y \
     vim \
     unzip \
     jq \
+    nano \
+    htop \
+    procps \  # Ensure we have ps command
     --no-install-recommends && \
-    # Link python3 to python3.10 explicitly if needed (Ubuntu 22.04 usually does this)
+    # Link python3 to python3.10 explicitly
     ln -sf /usr/bin/python3.10 /usr/bin/python3 && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
@@ -28,7 +30,7 @@ RUN apt-get update && apt-get install -y \
 # Create the /run/sshd directory required by sshd
 RUN mkdir -p /run/sshd && chmod 0755 /run/sshd
 
-# Install AWS CLI v2 (requires curl and unzip)
+# Install AWS CLI v2
 RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
     && unzip awscliv2.zip \
     && ./aws/install \
@@ -44,16 +46,9 @@ WORKDIR /app
 # Copy requirements first for better caching
 COPY requirements.txt /app/
 
-# --- Combine all Python package installations into a SINGLE RUN command ---
-# This minimizes layers and allows cleaning up temporary files within the same step
-# Add cleanup at the end to remove downloaded wheels/cache if possible
+# Combine all Python package installations into a single run command for smaller layers
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    # Add any build-time dependencies needed for packages in requirements.txt here
-    # e.g., build-essential cmake etc. if needed, otherwise remove this line
-    && \
-    # Install all pip packages together
-    pip3 install --no-cache-dir \
-    # Base dependencies (consider pinning)
+    && pip3 install --no-cache-dir \
     boto3 \
     requests \
     pyyaml \
@@ -61,48 +56,39 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     urllib3 \
     botocore \
     soundfile \
-    # Install torch explicitly (PIN VERSION!) - ensure compatibility with CUDA 12.4
-    # Example: torch==2.6.0+cu124 torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
     torch \
     torchvision \
     torchaudio \
-    # Install from requirements.txt
-    # **** INVESTIGATE the "UNKNOWN" package being built/installed - is it intended? ****
-    # **** It might come from a line like '.' or similar in requirements.txt ****
     -r requirements.txt \
-    # Install whisperx dependencies (PIN VERSIONS!)
     pandas \
     transformers \
     nltk \
     pyannote.audio \
-    # --- Cleanup within the SAME RUN command ---
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
-        # Add package names listed above if they were build-time only deps
     && rm -rf /var/lib/apt/lists/* \
     && rm -rf /root/.cache/pip
 
 # Clone and install WhisperX from GitHub into /opt/whisperx
-# (Recommend pinning WhisperX version via tag or commit)
 RUN git clone https://github.com/m-bain/whisperx.git /opt/whisperx && \
     pip3 install --no-cache-dir /opt/whisperx && \
-    # Clean up pip cache again after this specific install
     rm -rf /root/.cache/pip
 
-# ---- CORE FIX for runtime: Set LD_LIBRARY_PATH ----
-# Add the location of the cuDNN libraries installed via pip (by torch dependency nvidia-cudnn-cu12)
-# to the dynamic linker search path. Assumes Python 3.10 from ubuntu22.04 base.
+# Set LD_LIBRARY_PATH for cuDNN libraries
 ENV LD_LIBRARY_PATH=/usr/local/lib/python3.10/dist-packages/nvidia/cudnn/lib/:$LD_LIBRARY_PATH
 
-# Set PYTHONPATH so that /opt/whisperx is included in module search (May be redundant after pip install)
+# Set PYTHONPATH so that /opt/whisperx is included in module search
 ENV PYTHONPATH=/opt/whisperx:$PYTHONPATH
 
-# Copy application code (preserving directory structure)
+# Copy application code
 COPY src/ /app/src/
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
-# This seems redundant if src/worker.py exists, but keeping original structure
 COPY src/worker.py /app/worker.py
 COPY docs/ /app/docs
+
+# Create helper scripts for manually starting/stopping the worker
+RUN echo '#!/bin/bash\npython3 worker.py --queue_url "https://sqs.us-east-2.amazonaws.com/635071011057/2025-03-15-youtube-transcription-queue" --s3_bucket 2025-03-15-youtube-transcripts --region us-east-2 >> /app/worker.log 2>&1' > /usr/local/bin/start-worker.sh && \
+    chmod +x /usr/local/bin/start-worker.sh
 
 # Create necessary directories for your application
 RUN mkdir -p /app/temp
@@ -110,9 +96,13 @@ RUN mkdir -p /app/temp
 # Set AWS region environment variable
 ENV AWS_DEFAULT_REGION=us-east-2
 
-# Health check configuration
+# Health check configuration - check the health_check.txt file
 HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
   CMD python3 -c "import os, time; health_file='/app/health_check.txt'; exit(0 if os.path.exists(health_file) and time.time() - os.path.getmtime(health_file) < 300 else 1)"
+
+RUN echo '#!/bin/bash\ntail -f /app/worker.log' > /usr/local/bin/monitor-worker.sh && \
+    chmod +x /usr/local/bin/monitor-worker.sh
+
 
 # Set entrypoint and expose SSH port
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
