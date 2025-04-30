@@ -55,7 +55,8 @@ RUN pip3 install --no-deps --no-cache-dir \
     huggingface-hub==0.17.3 \
     faster-whisper==1.1.0 \
     pandas==2.0.3 \
-    nltk==3.8.1
+    nltk==3.8.1 \
+    tqdm
 
 # Install any remaining dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
