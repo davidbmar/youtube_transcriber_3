@@ -52,6 +52,7 @@ RUN pip3 install --no-deps --no-cache-dir \
     whisperx==3.3.2 \
     pyannote.audio==3.3.2 \
     transformers==4.35.2 \
+    huggingface-hub==0.17.3 \
     faster-whisper==1.1.0 \
     pandas==2.0.3 \
     nltk==3.8.1
