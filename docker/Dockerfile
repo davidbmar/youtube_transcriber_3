@@ -45,7 +45,8 @@ RUN pip3 install --no-cache-dir \
     soundfile==0.12.1 \
     ffmpeg-python==0.2.0
 
-# Install ASR & transcription stack without pulling in extra torch\ RUN pip3 install --no-deps --no-cache-dir \
+# Install ASR & transcription stack without pulling in extra torch
+RUN pip3 install --no-deps --no-cache-dir \
     whisperx==3.3.2 \
     pyannote.audio==3.3.2 \
     transformers==4.35.2 \
@@ -74,4 +75,5 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=60s --retries=3 \
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 EXPOSE 22
 CMD ["--help"]
+
 
