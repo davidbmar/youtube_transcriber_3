@@ -59,7 +59,8 @@ RUN pip3 install --no-deps --no-cache-dir \
     tqdm \
     packaging \
     "regex!=2019.12.17" \
-    safetensors>=0.3.1
+    safetensors>=0.3.1 \
+    ctranslate2
 
 # Install any remaining dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
