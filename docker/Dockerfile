@@ -56,7 +56,10 @@ RUN pip3 install --no-deps --no-cache-dir \
     faster-whisper==1.1.0 \
     pandas==2.0.3 \
     nltk==3.8.1 \
-    tqdm
+    tqdm \
+    packaging \
+    "regex!=2019.12.17" \
+    safetensors>=0.3.1
 
 # Install any remaining dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
