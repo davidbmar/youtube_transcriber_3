@@ -36,12 +36,14 @@ RUN pip3 install --no-cache-dir \
     torchaudio==2.0.2+cu118 \
     --extra-index-url https://download.pytorch.org/whl/cu118
 
-# Core Python libraries
+# Core Python libraries (including date/time support)
 RUN pip3 install --no-cache-dir \
     numpy==1.24.3 \
     boto3==1.28.0 \
     requests==2.31.0 \
     pyyaml==6.0 \
+    python-dateutil==2.9.0 \
+    pytz \
     soundfile==0.12.1 \
     ffmpeg-python==0.2.0
 
