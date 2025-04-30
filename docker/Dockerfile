@@ -60,7 +60,8 @@ RUN pip3 install --no-deps --no-cache-dir \
     packaging \
     "regex!=2019.12.17" \
     safetensors>=0.3.1 \
-    ctranslate2
+    ctranslate2 \
+    av
 
 # Install any remaining dependencies
 RUN pip3 install --no-cache-dir -r requirements.txt
