@@ -1,5 +1,6 @@
-# Use CUDA 11.8 with cuDNN 8 development libraries
-FROM nvidia/cuda:11.8.0-cudnn8-devel-ubuntu22.04
+# Base image with PyTorch and CUDA 11.8 pre-installed
+to support GPU acceleration
+FROM pytorch/pytorch:2.0.1-cuda11.8-cudnn8-runtime
 
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
@@ -7,12 +8,10 @@ ENV PYTHONUNBUFFERED=1 \
     DEBIAN_FRONTEND=noninteractive \
     AWS_DEFAULT_REGION=us-east-2
 
-# Install OS-level and build dependencies
+# Install OS-level dependencies and image libs
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential python3.10 python3.10-dev python3-pip \
     ffmpeg git wget curl vim unzip jq nano htop procps \
-    libsndfile1 libsndfile1-dev libjpeg-dev libpng-dev libssl-dev \
- && ln -sf /usr/bin/python3.10 /usr/bin/python3 \
+    libsndfile1 libjpeg-dev libpng-dev libssl-dev \
  && rm -rf /var/lib/apt/lists/*
 
 # Install AWS CLI and yt-dlp
@@ -27,22 +26,9 @@ WORKDIR /app
 # Copy Python requirements
 COPY requirements.txt /app/
 
-# Install Python dependencies (Torch + ASR stack)
-RUN pip3 install --upgrade pip && \
+# Upgrade pip and install ASR + transcription stack deps
+RUN pip3 install --no-cache-dir --upgrade pip && \
     pip3 install --no-cache-dir \
-      torch==2.0.1+cu118 \
-      torchvision==0.15.2+cu118 \
-      torchaudio==2.0.2+cu118 \
-      --extra-index-url https://download.pytorch.org/whl/cu118 && \
-    pip3 install --no-cache-dir \
-      numpy==1.24.3 \
-      boto3==1.28.0 \
-      requests==2.31.0 \
-      pyyaml==6.0 \
-      python-dateutil==2.9.0 \
-      pytz \
-      soundfile==0.12.1 \
-      ffmpeg-python==0.2.0 \
       whisperx==3.3.2 \
       pyannote.audio==3.3.2 \
       transformers==4.35.2 \
